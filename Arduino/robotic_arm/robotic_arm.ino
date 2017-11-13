@@ -24,9 +24,18 @@ void setup() {
 void loop() {
   String msg; 
   if (Serial.available() > 0) {
-    // read the incoming byte:
+    // read the incoming string:
     msg = Serial.readString();
-    int angle = msg.toInt();
-    servo_0.write(angle);
+    // Parse string and convert into ints
+    int angle_0 = msg.substring(0,3).toInt();
+    int angle_1 = msg.substring(3,6).toInt();
+    int angle_2 = msg.substring(6,9).toInt();
+    int angle_3 = msg.substring(9,12).toInt();
+    
+    // Write to servos incoming angles
+    servo_0.write(angle_0);
+    servo_1.write(angle_1);
+    servo_2.write(angle_2);
+    servo_3.write(angle_3);
   }
 }
