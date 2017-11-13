@@ -21,3 +21,9 @@ Upload robotic_arm.ino to Arduino.
 sudo python Pi/control_servos.py
 ```
 
+### Resources
+[flask](http://flask.pocoo.org/docs/0.12/quickstart/)  
+[toInt()](https://www.arduino.cc/en/Tutorial/StringToIntExample)  
+[pySerial](http://pyserial.readthedocs.io/en/latest/pyserial_api.html)  
+[readString()](http://www.instructables.com/id/Arduino-Function-Serialread-And-SerialreadString/)  
+[Servo.h](https://www.arduino.cc/en/Tutorial/Sweep)
