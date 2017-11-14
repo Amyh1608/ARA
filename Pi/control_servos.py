@@ -19,8 +19,8 @@ class Arm():
         msg =''
         for angle in angles:
             msg += str(angle).zfill(3)
-            arduino.write(msg)
-            time.sleep(3)
+        arduino.write(msg)
+        time.sleep(3)
     
     def update(self,servo_id, angle):
         self.servos[int(servo_id)] = int(angle)
