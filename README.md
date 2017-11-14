@@ -56,3 +56,8 @@ Install libraries.
 sudo apt-get install python-smbus
 sudo apt-get install i2c-tools
 ```
+
+```
+sudo pip install adafruit-pca9685
+
+```
