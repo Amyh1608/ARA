@@ -1,6 +1,6 @@
 import serial
 import time
-from flask import Flask, request, session, g, redirect, url_for, abort, render_template, flash
+from flask import Flask
 
 app = Flask(__name__)
 

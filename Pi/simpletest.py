@@ -4,10 +4,12 @@
 # License: Public Domain
 from __future__ import division
 import time
+from flask import Flask
+
+app = Flask(__name__)
 
 # Import the PCA9685 module.
 import Adafruit_PCA9685
-
 
 # Initialise the PCA9685 using the default address (0x40).
 pwm = Adafruit_PCA9685.PCA9685()
@@ -26,14 +28,26 @@ def set_servo_pulse(channel, pulse):
     pulse *= 1000
     pulse //= pulse_length
     pwm.set_pwm(channel, 0, pulse)
+    
+def angle_to_pwm(angle):
+    
+    pwm_length = servo_min + servo_max/180.*angle
+    
+    return pwm_length
 
 # Set frequency to 60hz, good for servos.
 pwm.set_pwm_freq(60)
 
-print('Moving servo on channel 0, press Ctrl-C to quit...')
-while True:
-    # Move servo on channel O between extremes.
-    pwm.set_pwm(0, 0, servo_min)
-    time.sleep(1)
-    pwm.set_pwm(0, 0, servo_max)
-    time.sleep(1)
+@app.route('/servo/<servo_id>/<angle>')
+def servo0(servo_id,angle):
+    
+    servo_id = int(servo_id)
+    angle = int(angle)
+    
+    pwm_length = angle_to_pwm(angle)
+    pwm.set_pwm(servo_id, 0, pwm_length
+    
+    return "Servo {} is at a {} angle.".format(servo_id, angle)
+    
+if __name__ == '__main__':
+    app.run(host='0.0.0.0', port=5000, threaded=True)
