@@ -41,3 +41,18 @@ sudo python Pi/control_servos.py
 [Servo.h](https://www.arduino.cc/en/Tutorial/Sweep)
 [Leading Zeros](https://stackoverflow.com/questions/733454/best-way-to-format-integer-as-string-with-leading-zeros)  
 [Arduino substring()](https://www.arduino.cc/en/Reference/StringSubstring)  
+
+## Servo Pi Hat Arm Control
+
+### Software Dependencies
+Need to set-up I2C on raspberry Pi by enabling I2C in Interfacing Options in ```raspi-config```.
+```
+sudo raspi-config
+```
+
+
+Install libraries.
+```
+sudo apt-get install python-smbus
+sudo apt-get install i2c-tools
+```
