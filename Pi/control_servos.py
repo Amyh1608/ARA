@@ -5,7 +5,7 @@ from flask import Flask, request, session, g, redirect, url_for, abort, render_t
 app = Flask(__name__)
 
 BAUD_RATE = 9600
-PORT = '/dev/ttyUSB0'
+PORT = '/dev/ttyACM0'
 
 arduino = serial.Serial(PORT, BAUD_RATE)
 
