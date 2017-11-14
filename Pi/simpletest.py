@@ -31,7 +31,7 @@ def set_servo_pulse(channel, pulse):
     
 def angle_to_pwm(angle):
     
-    pwm_length = servo_min + servo_max/180.*angle
+    pwm_length = servo_min + ((servo_max-servo_min)/180.*angle)
     
     return pwm_length
 
@@ -44,8 +44,9 @@ def servo0(servo_id,angle):
     servo_id = int(servo_id)
     angle = int(angle)
     
-    pwm_length = angle_to_pwm(angle)
-    pwm.set_pwm(servo_id, 0, pwm_length
+    pwm_length = int(angle_to_pwm(angle))
+    print(pwm_length)
+    pwm.set_pwm(servo_id, 0, pwm_length)
     
     return "Servo {} is at a {} angle.".format(servo_id, angle)
     
