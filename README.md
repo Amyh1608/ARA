@@ -61,3 +61,29 @@ sudo apt-get install i2c-tools
 sudo pip install adafruit-pca9685
 
 ```
+
+## Connecting to UCSD-PROTECTED
+
+```
+sudo vim /etc/wpa_supplicant/wpa_supplicant.conf
+
+```
+Enter this into the file:
+```
+network={
+    ssid="UCSD-PROTECTED"
+    key_mgmt=WPA-EAP
+    identity="username"
+    password="password"
+}
+```
+
+An example of what you should insert below:
+```
+network={
+    ssid="UCSD-PROTECTED"
+    key_mgmt=WPA-EAP
+    identity="stf223"
+    password="121s4d3f"
+}
+```
