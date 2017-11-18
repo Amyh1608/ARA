@@ -64,11 +64,15 @@ sudo pip install adafruit-pca9685
 
 ## Connecting to UCSD-PROTECTED
 
+### Accreditation
+Instructions for connecting to WiFI were all taken from Stazia's IEEE's Fall Quarterly Projects Resources. You can find here github repository [here](https://github.com/WigginWannabe/qp16-fall).
+
+Run this commad to edit the WiFi network file.
 ```
 sudo vim /etc/wpa_supplicant/wpa_supplicant.conf
-
 ```
-Enter this into the file:
+
+Once you are in type the following into the file. Remember to replace "username"and password with your own username and password. (If you see one of these network chunks of text already, just enter yours at the bottom.)
 ```
 network={
     ssid="UCSD-PROTECTED"
@@ -87,3 +91,10 @@ network={
     password="121s4d3f"
 }
 ```
+
+Now you should reboot your Pi with the following command:
+```
+sudo reboot now
+```
+
+After the reboot, you should now be automatically connected to UCSD-PROTECTED if you followed all the instructions correctly.
