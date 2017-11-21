@@ -4,7 +4,20 @@
 # License: Public Domain
 from __future__ import division
 import time
-from flask import Flask
+import os
+from ball_tracking import *
+from flask import Flask, send_file
+
+# Import Pi Camera module.
+from picamera.array import PiRGBArray
+from picamera import PiCamera
+camera = PiCamera()
+camera.resolution = (800, 600)
+camera.framerate = 60
+camera.rotation = 180
+
+IMAGE_DIR = 'images'
+image_count = 0
 
 app = Flask(__name__)
 
@@ -82,29 +95,60 @@ def scan():
     STEP_SIZE = 45
 
     # Init elbow to be straight and gripper open
-    servo(ELBOW,90)
+    servo(SHOULDER,80)
+    servo(ELBOW,180)
     servo(GRIPPER,90)
 
     # Calculate how many steps
     STEPS = int(180/STEP_SIZE + 1)
 
-       
+    '''   
     # Sweep through angles for shoulder
-    for shoulder_step in range(STEPS-3):
-        shoulder_angle = (5-shoulder_step) * STEP_SIZE
+    for shoulder_step in range(STEPS-2):
+        shoulder_angle = shoulder_step * (STEP_SIZE-30) + 15
         servo(SHOULDER,shoulder_angle)
         print("shoulder = {}".format(shoulder_angle))
         time.sleep(1)
-        # Sweep through angles for base
-        for base_step in range(STEPS):
-            base_angle = base_step * STEP_SIZE 
-            servo(BASE,base_angle)
-            print("base = {}".format(base_angle))
-            time.sleep(1)
- 
+        '''
+    # Sweep through angles for base
+    for base_step in range(STEPS):
+        base_angle = base_step * STEP_SIZE 
+        servo(BASE,base_angle)
+        print("base = {}".format(base_angle))
+        time.sleep(1)
+        
 
 
     return 'Scanning...'
+
+@app.route('/camera/shoot')
+def take_picture():
+    # Init camera
+    camera.resolution = (640, 480)
+
+    camera.start_preview()
+    time.sleep(2) # Need to wait at least 2 seconds before capturing
+
+    # Create save path
+    global image_count
+    image_name = 'capture_' + str(image_count) + '.jpg'
+    image_count += 1
+    image_path = os.path.join(IMAGE_DIR,image_name)
+
+    # Capture
+    camera.capture(image_path)
+    camera.stop_preview()
+    img_bgr = cv2.imread(image_path)
+    pos_x, pos_y, radius = ball_tracking(img_bgr)
+    
+    # Return image html
+    image_source = os.path.join('image',image_name)
+    return "Took a shot...<br><img src='{}'>".format(image_source)    
+
+@app.route('/camera/image/<image>')
+def get_image(image):
+    image_path = os.path.join(IMAGE_DIR,image)
+    return send_file(image_path,mimetype='image/gif')
     
 
 if __name__ == '__main__':
