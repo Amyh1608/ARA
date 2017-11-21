@@ -61,6 +61,18 @@ sudo apt-get install i2c-tools
 sudo pip install adafruit-pca9685
 
 ```
+## Running Ball Detection
+Detects the target ball and gives coordinates within image as well as the radiusin pixels.
+
+### Software Dependencies
+```
+sudo apt-get install imutils
+```
+
+### Execution
+```
+python ball_tracking_original.py
+```
 
 ## Connecting to UCSD-PROTECTED
 
