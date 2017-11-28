@@ -31,6 +31,9 @@ Upload robotic_arm.ino to Arduino.
 
 ```
 sudo python Pi/control_servos.py
+
+something
+pip install imutils
 ```
 
 ### Resources
