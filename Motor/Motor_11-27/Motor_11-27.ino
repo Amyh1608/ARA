@@ -7,6 +7,7 @@ int PWMA=10;
 int PWMB=11;
 int serialData=0;
 int test=0;
+
 void setup() {
   int i;
   for(i=2;i<=6;i++)
@@ -108,10 +109,7 @@ void loop() {
     }
     Serial.println("end");
  }
-  
-  
-  
-  
+
   
   
   
