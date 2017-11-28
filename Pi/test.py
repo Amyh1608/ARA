@@ -1,4 +1,10 @@
-from ball_tracking import *
+camera = PiCamera()
+camera.resolution = (800, 600)
+camera.framerate = 30
+camera.rotation = 180
+rawCapture = PiRGBArray(camera, size=(800, 600))
+time.sleep(1.0)
+#term=from ball_tracking import *
 import cv2
 
 #reference info

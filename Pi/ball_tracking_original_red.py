@@ -24,6 +24,7 @@ redUpper = (10, 255, 255)
 camera = PiCamera()
 camera.resolution = (800, 600)
 camera.framerate = 30
+camera.rotation = 180
 rawCapture = PiRGBArray(camera, size=(800, 600))
 time.sleep(1.0)
 #term=0

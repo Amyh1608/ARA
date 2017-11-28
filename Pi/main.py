@@ -5,16 +5,27 @@
 from __future__ import division
 import time
 import os
-from ball_tracking import *
+import numpy as np
+import cv2
+from ball_tracking_red import detect
 from flask import Flask, send_file
 
 # Import Pi Camera module.
 from picamera.array import PiRGBArray
 from picamera import PiCamera
+CAMERA_WIDTH = 800
+CAMERA_HEIGHT = 600
 camera = PiCamera()
-camera.resolution = (800, 600)
-camera.framerate = 60
+camera.resolution = (CAMERA_WIDTH, CAMERA_HEIGHT)
+camera.framerate = 30
 camera.rotation = 180
+rawCapture = PiRGBArray(camera, size=(CAMERA_WIDTH, CAMERA_HEIGHT))
+time.sleep(1.0)
+
+# Centering constants
+x_center = CAMERA_HEIGHT/2
+x_thresh = 50
+x_step = 5 # Degrees to step
 
 IMAGE_DIR = 'images'
 image_count = 0
@@ -39,7 +50,33 @@ GRIPPER = 4
 
 # Servo mapped limits
 GRIPPER_OPEN = 145
-GRIPPER_CLOSE = 90    
+GRIPPER_CLOSE = 90
+
+class Arm():
+    def __init__(self):
+        self.base = 0
+        self.shoulder = 0
+        self.elbow = 0
+        self.gripper = 0
+    
+    def update(self, servo_id, angle):
+        servo_id = int(servo_id)
+        angle = int(angle)    
+    
+        if(servo_id == BASE):
+            self.base = angle
+        elif(servo_id == SHOULDER):
+            self.shoulder = angle
+        elif(servo_id == ELBOW):
+            self.elbow = angle
+        elif(servo_id == GRIPPER):
+            self.gripper = angle
+        else:
+            print("Error in Arm.update()")
+
+        set_servo(servo_id, angle)
+        
+arm = Arm()
 
 # Helper function to make setting a servo pulse width simpler.
 def set_servo_pulse(channel, pulse):
@@ -53,9 +90,7 @@ def set_servo_pulse(channel, pulse):
     pwm.set_pwm(channel, 0, pulse)
     
 def angle_to_pwm(angle):
-    
     pwm_length = servo_min + ((servo_max-servo_min)/180.*angle)
-    
     return pwm_length
 
 # Set frequency to 60hz, good for servos.
@@ -63,15 +98,16 @@ pwm.set_pwm_freq(60)
 
 @app.route('/servo/<servo_id>/<angle>')
 def servo(servo_id,angle):
-    
-    servo_id = int(servo_id)
-    angle = int(angle)
+    arm.update(servo_id, angle)
+
+    return "Servo {} is at a {} angle.".format(servo_id, angle)
+
+def set_servo(servo_id,angle):
     
     pwm_length = int(angle_to_pwm(angle))
     print(pwm_length)
     pwm.set_pwm(servo_id, 0, pwm_length)
     
-    return "Servo {} is at a {} angle.".format(servo_id, angle)
 
 @app.route('/dance')
 def sequence():
@@ -190,7 +226,53 @@ def drop():
     '''
     servo(GRIPPER, GRIPPER_OPEN)
     return "Gripper opened"
-    
+
+@app.route('/detect')
+def detect_object():
+    camera.start_preview()
+    time.sleep(2) # Need to wait at least 2 seconds before capturing
+
+    # Create save path
+    global image_count
+    image_name = 'capture_' + str(image_count) + '.jpg'
+    image_count += 1
+    image_path = os.path.join(IMAGE_DIR,image_name)
+
+    # Capture
+    camera.capture(image_path)
+    camera.stop_preview()
+    frame = cv2.imread(image_path)
+
+    object_vals = detect(frame)
+    print(object_vals)
+    return "hello"
+
+@app.route('/center')
+def center():
+    for frame in camera.capture_continuous(rawCapture, format="bgr", use_video_port=True):
+        frame = frame.array
+        object_vals = detect(frame)
+        rawCapture.truncate(0)
+        print(object_vals)
+        if(type(object_vals) is tuple):
+            x = object_vals[1]
+            y = object_vals[2]
+            radius = object_vals[3]
+            if(x > (x_center + x_thresh)):
+                arm.update(BASE, arm.base - x_step)
+            elif(x < (x_center - x_thresh)):
+                arm.update(BASE, arm.base + x_step)
+            else:
+                print("X centered")
+                break
+            
+        else:
+            print("Object not detected")
+            return "Object not detected"
+            break
+
+    return "Centered!!!"
 
 if __name__ == '__main__':
+    #center()
     app.run(host='0.0.0.0', port=5000, threaded=True)
