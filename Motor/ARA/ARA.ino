@@ -1,3 +1,6 @@
+/************************************************************************************************************
+  Initialization of Libraries
+*************************************************************************************************************/
 #include "Arduino.h"
 #if !defined(SERIAL_PORT_MONITOR)
   #error "Arduino version not supported. Please update your IDE to the latest version."
@@ -20,15 +23,29 @@
 
 #include "EasyVR.h"
 
-int motorCode = 0;
-//Codes will be the following: 
-//      FORWARD = 400 
-//      BACKWARD = 401
-//      LEFT = 402
-//      RIGHT = 403
+/************************************************************************************************************
+  Initialization of Variables
+  NOTE: motorCodes will be following:
+        FORWARD = 400
+        BACKWARD = 401
+        LEFT = 402
+        RIGHT = 403
+*************************************************************************************************************/
 EasyVR easyvr(port);
 
-//Groups and Commands
+int AIN1=2;
+int AIN2=3;
+int STBY=4;
+int BIN1=5;
+int BIN2=6;
+int PWMA=10;
+int PWMB=11;
+int serialData=0;
+int motorCode = 0;
+
+/************************************************************************************************************
+  Groups and Commands
+*************************************************************************************************************/
 enum Groups
 {
   GROUP_0  = 0,
@@ -39,7 +56,9 @@ enum Group0
   G0_ARA = 0,
 };
 
-//Grammars and Words
+/************************************************************************************************************
+  Grammar and Words
+*************************************************************************************************************/
 enum Wordsets
 {
   SET_1  = -1,
@@ -84,13 +103,21 @@ enum Wordset3
   S3_TEN = 10,
 };
 
-
 // use negative group for wordsets
 int8_t group, idx;
 
+/************************************************************************************************************
+  Set-Up Function
+*************************************************************************************************************/
 void setup()
 {
+  int i;
+  for(i=2;i<=6;i++)
+  pinMode(i,OUTPUT);
+  pinMode(10,OUTPUT);
+  pinMode(11,OUTPUT);
 
+  
   // setup PC serial port
   pcSerial.begin(9600);
 bridge:
@@ -166,6 +193,9 @@ bridge:
   group = EasyVR::TRIGGER; //<-- start group (customize)
 }
 
+/************************************************************************************************************
+  Loop Function
+*************************************************************************************************************/
 void loop()
 {
   if (easyvr.getID() < EasyVR::EASYVR3)
@@ -268,7 +298,10 @@ void loop()
     }
   }
 }
-
+/************************************************************************************************************
+  Action Function
+  Switches between the groups and where each of the actions will be coded into the program.
+*************************************************************************************************************/
 void action()
 {
   switch (group)
@@ -326,12 +359,14 @@ void action()
     case S2_LEFT:
       // write your action code here
       // group = GROUP_X\SET_X; <-- or jump to another group or wordset for composite commands
+      left();
       motorCode = 402;
       group = GROUP_0;
       break;
     case S2_RIGHT:
       // write your action code here
       // group = GROUP_X\SET_X; <-- or jump to another group or wordset for composite commands
+      right();
       motorCode = 403;
       group = GROUP_0;
       break;
@@ -346,6 +381,7 @@ void action()
     case S2_FORWARD:
       // write your action code here
       // group = GROUP_X\SET_X; <-- or jump to another group or wordset for composite commands
+      forward();
       motorCode = 400;
       group = GROUP_0;
       break;
@@ -353,6 +389,7 @@ void action()
       // write your action code here
       // group = GROUP_X\SET_X; <-- or jump to another group or wordset for composite commands
       motorCode = 401;
+      reverse();
       group = GROUP_0;
       break;
     }
@@ -407,4 +444,58 @@ void action()
     }
     break;
   }
+}
+/************************************************************************************************************
+  Directional Functions
+*************************************************************************************************************/
+void forward(){
+  digitalWrite(STBY,HIGH);
+  digitalWrite(AIN1,HIGH);
+  digitalWrite(AIN2,LOW);
+  digitalWrite(PWMA,200);
+  digitalWrite(BIN1,HIGH);
+  digitalWrite(BIN2,LOW);
+  digitalWrite(PWMB,200);
+  delay(1000);
+  digitalWrite(STBY,LOW);
+  delay(1000);
+}
+
+void reverse(){
+  digitalWrite(STBY,HIGH);
+  digitalWrite(AIN1,LOW);
+  digitalWrite(AIN2,HIGH);
+  digitalWrite(PWMA,200);
+  digitalWrite(BIN1,LOW);
+  digitalWrite(BIN2,HIGH);
+  digitalWrite(PWMB,200);
+  delay(1000);
+  digitalWrite(STBY,LOW);
+  delay(1000);
+}
+
+void left(){
+  digitalWrite(STBY,HIGH);
+  digitalWrite(AIN1,LOW);
+  digitalWrite(AIN2,HIGH);
+  digitalWrite(PWMA,200);
+  digitalWrite(BIN1,HIGH);
+  digitalWrite(BIN2,LOW);
+  digitalWrite(PWMB,200);
+  delay(1000);
+  digitalWrite(STBY,LOW);
+  delay(1000);
+}
+
+void right(){
+  digitalWrite(STBY,HIGH);
+  digitalWrite(AIN1,HIGH);
+  digitalWrite(AIN2,LOW);
+  digitalWrite(PWMA,200);
+  digitalWrite(BIN1,LOW);
+  digitalWrite(BIN2,HIGH);
+  digitalWrite(PWMB,200);
+  delay(1000);
+  digitalWrite(STBY,LOW);
+  delay(1000);
 }
