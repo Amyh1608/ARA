@@ -17,9 +17,9 @@ import time
 # define the lower and upper boundaries of the "green"
 # ball in the HSV color space, then initialize the
 # list of tracked points
-blackLower = (87, 21, 34)
-blackUpper = (168, 180, 80)
 
+blackLower = (24, 0, 37)
+blackUpper = (124, 167, 145)
 '''
 camera = PiCamera()
 camera.resolution = (800, 600)

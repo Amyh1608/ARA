@@ -37,6 +37,10 @@ SHOULDER = 1
 ELBOW = 2
 GRIPPER = 4
 
+# Servo mapped limits
+GRIPPER_OPEN = 145
+GRIPPER_CLOSE = 90    
+
 # Helper function to make setting a servo pulse width simpler.
 def set_servo_pulse(channel, pulse):
     pulse_length = 1000000    # 1,000,000 us per second
@@ -149,6 +153,43 @@ def take_picture():
 def get_image(image):
     image_path = os.path.join(IMAGE_DIR,image)
     return send_file(image_path,mimetype='image/gif')
+
+@app.route('/store')
+def store():
+    STEP_TIME = 1
+
+    # Moves arm to face forward
+    servo(BASE, 90)
+    time.sleep(STEP_TIME)
+    
+    # Move shoulder to straight up
+    servo(SHOULDER, 135)
+    time.sleep(STEP_TIME)
+
+    # Move elbow to bend 90 degrees back
+    servo(ELBOW, 10) 
+    time.sleep(STEP_TIME)
+
+    # Release object
+    drop()
+    
+    return "Object has been stored"
+
+@app.route('/grab')
+def grab():
+    '''
+    Closes gripper
+    '''
+    servo(GRIPPER, GRIPPER_CLOSE)
+    return "Gripper closed"
+
+@app.route('/drop')
+def drop():
+    '''
+    Opens gripper
+    '''
+    servo(GRIPPER, GRIPPER_OPEN)
+    return "Gripper opened"
     
 
 if __name__ == '__main__':
