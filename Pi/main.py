@@ -23,9 +23,12 @@ rawCapture = PiRGBArray(camera, size=(CAMERA_WIDTH, CAMERA_HEIGHT))
 time.sleep(1.0)
 
 # Centering constants
-x_center = CAMERA_HEIGHT/2
-x_thresh = 50
-x_step = 5 # Degrees to step
+x_center = CAMERA_WIDTH/2
+y_center = CAMERA_HEIGHT/2
+x_thresh = 10
+y_thresh = 10
+x_step = 1 # Degrees to step
+y_step = 1
 
 IMAGE_DIR = 'images'
 image_count = 0
@@ -58,7 +61,7 @@ class Arm():
         self.shoulder = 0
         self.elbow = 0
         self.gripper = 0
-    
+
     def update(self, servo_id, angle):
         servo_id = int(servo_id)
         angle = int(angle)    
@@ -77,6 +80,11 @@ class Arm():
         set_servo(servo_id, angle)
         
 arm = Arm()
+
+def init_arm():
+    arm.update(BASE, 90)
+    arm.update(SHOULDER, 90)
+    arm.update(ELBOW, 150)
 
 # Helper function to make setting a servo pulse width simpler.
 def set_servo_pulse(channel, pulse):
@@ -131,6 +139,7 @@ def sequence():
 
 @app.route('/scan')
 def scan():
+
     # How many degrees per step
     STEP_SIZE = 45
 
@@ -180,7 +189,7 @@ def take_picture():
     camera.stop_preview()
     img_bgr = cv2.imread(image_path)
     pos_x, pos_y, radius = ball_tracking(img_bgr)
-    
+    detect
     # Return image html
     image_source = os.path.join('image',image_name)
     return "Took a shot...<br><img src='{}'>".format(image_source)    
@@ -244,11 +253,18 @@ def detect_object():
     frame = cv2.imread(image_path)
 
     object_vals = detect(frame)
-    print(object_vals)
-    return "hello"
+    distance = dist(object_vals[3])
+    print("dist", distance) 
+    #print(object_vals)
+    if(type(object_vals) is tuple):
+        output = "detected"
+    else:
+        output = "fuQ"
+    return output
 
 @app.route('/center')
 def center():
+    X_centered = False
     for frame in camera.capture_continuous(rawCapture, format="bgr", use_video_port=True):
         frame = frame.array
         object_vals = detect(frame)
@@ -258,21 +274,55 @@ def center():
             x = object_vals[1]
             y = object_vals[2]
             radius = object_vals[3]
-            if(x > (x_center + x_thresh)):
+            if(x > (x_center + x_thresh) and not(X_centered)):
                 arm.update(BASE, arm.base - x_step)
-            elif(x < (x_center - x_thresh)):
+            elif(x < (x_center - x_thresh) and not(X_centered)):
                 arm.update(BASE, arm.base + x_step)
             else:
                 print("X centered")
-                break
+                X_centered = True
+                if(y > (y_center + y_thresh)):
+                    print("Y down")
+                    arm.update(ELBOW, arm.elbow + y_step)
+                elif(y < (y_center - y_thresh)):
+                    print("Y up")
+                    arm.update(ELBOW, arm.elbow - y_step)
+                else:
+                    print("Y centered")
+                    break
             
         else:
             print("Object not detected")
             return "Object not detected"
             break
+        #time.sleiep(0.5)
 
-    return "Centered!!!"
+    #return "Centered"
+    return str(radius)
+
+def dist(radius):
+    img_ref = cv2.imread('15cm.jpg')
+    #ref_vals = detect(img_ref)
+    ref_dist = 15
+    #print("ref_vals",ref_vals)
+    ref_vals = 70
+    ratio = ref_dist*ref_vals
+    #print("ratio", ratio)
+    return ratio/radius    
+
+@app.route('/zoom')
+def zoom():
+    arm.update(GRIPPER, GRIPPER_OPEN)
+    while(True):
+        arm.update(SHOULDER, arm.shoulder - 5)
+        radius = center()
+        print(dist(float(radius)))
+        if(dist(float(radius)) < 6):
+            break
+    
+    return "Zoomed In"
+        
 
 if __name__ == '__main__':
-    #center()
+    init_arm()
     app.run(host='0.0.0.0', port=5000, threaded=True)

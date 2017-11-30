@@ -74,22 +74,22 @@ def detect(frame):
             print 'y-axis:',center[1]
             print 'x-axis:',center[0]
             print 'radius is' ,radius
-            cv2.circle(frame, (int(x), int(y)), int(radius),	(0, 255, 255), 2)
+            #cv2.circle(frame, (int(x), int(y)), int(radius),	(0, 255, 255), 2)
             
-            cv2.circle(frame, center, 5, (0, 0, 255), -1)
+            #cv2.circle(frame, center, 5, (0, 0, 255), -1)
 
     # update the points queue
     else :
                 print '---------------------------'
                 print 'not detected'
 
-    cv2.imshow("Frame", frame)
-    key = cv2.waitKey(1) & 0xFF
-    time.sleep(1)
+    #cv2.imshow("Frame", frame)
+    #key = cv2.waitKey(1) & 0xFF
+    #time.sleep(1)
     #rawCapture.truncate(0) 
     
 
-    cv2.destroyAllWindows()
+    #cv2.destroyAllWindows()
     
     if len(cnts) > 0:
         # Return (If object detected, x-cord, y-cord, radius)
