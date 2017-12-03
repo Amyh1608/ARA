@@ -12,7 +12,7 @@ from flask import Flask, send_file
 
 # Import Pi Camera module.
 from picamera.array import PiRGBArray
-from picamera import PiCamera
+from     picamera import PiCamera
 CAMERA_WIDTH = 800
 CAMERA_HEIGHT = 600
 camera = PiCamera()
@@ -52,7 +52,7 @@ ELBOW = 2
 GRIPPER = 4
 
 # Servo mapped limits
-GRIPPER_OPEN = 145
+GRIPPER_OPEN = 160
 GRIPPER_CLOSE = 90
 
 class Arm():
@@ -63,6 +63,7 @@ class Arm():
         self.gripper = 0
 
     def update(self, servo_id, angle):
+
         servo_id = int(servo_id)
         angle = int(angle)    
     
@@ -152,7 +153,8 @@ def scan():
     STEPS = int(180/STEP_SIZE + 1)
 
     '''   
-    # Sweep through angles for shoulder
+    # Sweep thr ugh angles forme in camera.capture_continuous(rawCapture, format="bgr", use_video_port=True):
+ shoulder
     for shoulder_step in range(STEPS-2):
         shoulder_angle = shoulder_step * (STEP_SIZE-30) + 15
         servo(SHOULDER,shoulder_angle)
@@ -213,23 +215,23 @@ def store():
 
     # Move elbow to bend 90 degrees back
     servo(ELBOW, 10) 
-    time.sleep(STEP_TIME)
-
+    time.sleep(3)
+    
     # Release object
-    drop()
+    open()
     
     return "Object has been stored"
 
-@app.route('/grab')
-def grab():
+@app.route('/close')
+def close():
     '''
     Closes gripper
     '''
     servo(GRIPPER, GRIPPER_CLOSE)
     return "Gripper closed"
 
-@app.route('/drop')
-def drop():
+@app.route('/open')
+def open():
     '''
     Opens gripper
     '''
@@ -257,7 +259,7 @@ def detect_object():
     print("dist", distance) 
     #print(object_vals)
     if(type(object_vals) is tuple):
-        output = "detected"
+        output = "detected " + str(distance) 
     else:
         output = "fuQ"
     return output
@@ -267,6 +269,10 @@ def center():
     X_centered = False
     for frame in camera.capture_continuous(rawCapture, format="bgr", use_video_port=True):
         frame = frame.array
+       
+        #TEST 
+        #print(np.mean(frame, dtype=np.float64))
+
         object_vals = detect(frame)
         rawCapture.truncate(0)
         print(object_vals)
@@ -281,6 +287,9 @@ def center():
             else:
                 print("X centered")
                 X_centered = True
+                #if((arm.elbow > 180) or (arm.elbow < 0)):
+                #    print("Elbow out of range.")
+                #    break
                 if(y > (y_center + y_thresh)):
                     print("Y down")
                     arm.update(ELBOW, arm.elbow + y_step)
@@ -294,8 +303,7 @@ def center():
         else:
             print("Object not detected")
             return "Object not detected"
-            break
-        #time.sleiep(0.5)
+        #time.sleep(0.i5)
 
     #return "Centered"
     return str(radius)
@@ -312,16 +320,61 @@ def dist(radius):
 
 @app.route('/zoom')
 def zoom():
+    #shoulder 5; arm 
+    #shoulder 5; arm 3 (Prob best so far)
+    #shoulder 8; arm 5
+    #shoulder 10; arm 10
+    shoulder_step = 5
+    arm_step = 3
     arm.update(GRIPPER, GRIPPER_OPEN)
     while(True):
-        arm.update(SHOULDER, arm.shoulder - 5)
+        arm.update(SHOULDER, arm.shoulder - shoulder_step)
+        time.sleep(0.5)
+        arm.update(ELBOW, arm.elbow - arm_step)
         radius = center()
-        print(dist(float(radius)))
-        if(dist(float(radius)) < 6):
+        print("SHOULDER: " + str(arm.shoulder))
+        print("ELBOW: " + str(arm.elbow))
+        if(is_num(radius)):
+            dist_away = dist(float(radius))
+            print("distance away: " + str(dist_away))
+            if(dist_away < 7):
+                #reduces noise at closer distances
+                x_thresh = 15
+                y_thresh = 15 
+            if(dist_away < 4):
+                break
+        else:
             break
-    
-    return "Zoomed In"
-        
+
+    #update this else where im fuqin dumb
+    #x_thresh = 10
+    #y_thresh = 10
+    return "Finished Zooming In"
+
+@app.route('/pick_up')
+def pick_up():
+    #NOTES: ~13-14cm from base
+    arm.update(SHOULDER, 60)
+    for i in range(5, 0, -1):
+        arm.update(ELBOW, arm.elbow - 6)
+        time.sleep(0.5)
+        arm.update(SHOULDER, arm.shoulder - 6)
+    arm.update(ELBOW, arm.elbow - 1)
+    time.sleep(1)
+    arm.update(SHOULDER, 40)
+    time.sleep(1)
+    close()
+    time.sleep(0.5)
+    store()
+
+    return 'Finished sequence'
+
+def is_num(input):
+    try:
+        float(input)
+        return True
+    except ValueError:
+        return False
 
 if __name__ == '__main__':
     init_arm()
