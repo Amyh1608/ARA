@@ -144,6 +144,15 @@ def take_picture():
     image_source = os.path.join(IMAGE_DIR,'current_image.jpg')
     return "Took a shot...<br><img src='{}'>".format(image_source)
 
+def is_object():
+    """Returns true if object detected, false otherwise"""
+    frame = shoot()
+    object_vals = detect(frame)
+    if(type(object_vals) is tuple):
+        return True
+    else:
+        return False
+
 @app.route('/camera/images/<image>')
 def get_image(image):
     """Gets image to display"""
@@ -169,10 +178,16 @@ def detect_object():
 
 
 #BEGIN SERVO BASIC COMMANDS############################################
+#state
 #servo
 #init_arm
 #store
 #dance
+
+@app.route('/state')
+def state():
+    return arm.print_arm()
+
 @app.route('/servo/<servo_id>/<angle>')
 def servo(servo_id,angle):
     """Allows for manual control of servos"""
@@ -290,11 +305,20 @@ def scan():
         print("shoulder = {}".format(shoulder_angle))
         time.sleep(1)
         '''
+    target_position = {'base': 0,
+                       'shoulder': 0,
+                       'elbow': 0,
+    
+    }
+
     # Sweep through angles for base
     for base_step in range(STEPS):
         base_angle = base_step * STEP_SIZE 
-        servo(BASE,base_angle)
+        arm.update(BASE,base_angle)
         print("base = {}".format(base_angle))
+        time.sleep(2)
+        if(is_object()):
+            return "Object found at {}".format(arm.get_arm_state())
         time.sleep(1)
         
     return 'Scanned'
@@ -397,7 +421,7 @@ def adjust():
     
     ADJUST_CENTER_Y = 454
     ADJUST_CENTER_X = 406
-    
+    X_centered = False
     for frame in camera.capture_continuous(
     rawCapture, format="bgr", use_video_port=True):
         rawCapture.truncate(0)
