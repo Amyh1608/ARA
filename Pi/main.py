@@ -98,7 +98,7 @@ class Arm():
         pwm_length = servo_min + ((servo_max-servo_min)/180.*angle)
         return pwm_length
         
-arm = Arm()
+arm = Arm(pwm)
 
 #END SERVO SETUP#######################################################
 
@@ -109,7 +109,7 @@ arm = Arm()
 #get_image
 #detect
 
-def shoot()
+def shoot():
     """Return a snapshot from camera"""
     # Create save path
     image_path = os.path.join(IMGAE_DIR,'current_image.jpg')
