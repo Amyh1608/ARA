@@ -390,6 +390,46 @@ def zoom():
     #x_thresh = 10
     #y_thresh = 10
     return "Finished Zooming In"
+    
+@app.route('/adjust')
+def adjust():
+    """Final adjustment for arm after zooming in"""
+    
+    ADJUST_CENTER_Y = 454
+    ADJUST_CENTER_X = 406
+    
+    for frame in camera.capture_continuous(
+    rawCapture, format="bgr", use_video_port=True):
+        rawCapture.truncate(0)
+        frame = frame.array
+
+        object_vals = detect(frame)
+        
+        if(type(object_vals) is tuple):
+            x = object_vals[1]
+            y = object_vals[2]
+            radius = object_vals[3]
+            if(x > (ADJUST_CENTER_X + x_thresh) and not(X_centered)):
+                arm.update(BASE, arm.base - x_step)
+            elif(x < (ADJUST_CENTER_X - x_thresh) and not(X_centered)):
+                arm.update(BASE, arm.base + x_step)
+            else:
+                print("X centered")
+                X_centered = True
+                if(y > (ADJUST_CENTER_Y + y_thresh)):
+                    print("Y down")
+                    arm.update(ELBOW, arm.elbow + y_step)
+                elif(y < (ADJUST_CENTER_Y - y_thresh)):
+                    print("Y up")
+                    arm.update(ELBOW, arm.elbow - y_step)
+                else:
+                    print("Y centered")
+                    break
+            
+        else:
+            print("Object not detected")
+            return "Object not detected"
+    return str(arm.get_arm_state())
 
 @app.route('/pick_up')
 def pick_up():
