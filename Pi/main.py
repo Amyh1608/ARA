@@ -97,6 +97,13 @@ class Arm():
         """Helper function to convert angles to pulse lengths"""
         pwm_length = servo_min + ((servo_max-servo_min)/180.*angle)
         return pwm_length
+    def get_arm_state(self):
+        """Return arm state"""
+        return (self.base,self.shoulder,self.elbow,self.gripper)
+
+    def print_arm(self):
+        return str(self.get_arm_state())
+        return "Base = {} <br>\n Shoulder = {} <br>\n Elbow = {} <br>\n Gripper =  {}<br>\n".format(self.get_arm_state())
         
 arm = Arm(pwm)
 
@@ -155,7 +162,7 @@ def detect_object():
     if(type(object_vals) is tuple):
         output = "detected " + str(distance) 
     else:
-        output = "fuQ"
+        output = "not detected"
     return output
 
 
@@ -170,10 +177,19 @@ def detect_object():
 @app.route('/servo/<servo_id>/<angle>')
 def servo(servo_id,angle):
     """Allows for manual control of servos"""
+    maps = {'base': BASE,
+            'shoulder': SHOULDER,
+            'elbow': ELBOW,
+            'gripper': GRIPPER
+    }
+    try:
+        servo_id = int(servo_id)
+    except:
+        servo_id = maps[servo_id]
     
     arm.update(servo_id, angle)
     
-    return "Servo {} is at a {} angle.".format(servo_id, angle)
+    return arm.print_arm()
     
 @app.route('/init')
 def init_arm():
@@ -201,7 +217,7 @@ def store():
     STEP_TIME = 1
 
     # Moves arm to face forward
-    servo(BASE, 90)
+    servo(BASE, 80)
     time.sleep(STEP_TIME)
     
     # Move shoulder to straight up
