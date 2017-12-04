@@ -486,14 +486,19 @@ def is_num(_input):
 @app.route('/freedom')
 def freedom():
     """Frees ARA to move on its own"""
-    scan()
+    response = scan()
+    if(response == "Scanned"):
+        return "Object not found!!!"
     center()
     zoom()
     adjust()
+    time.sleep(3)
     close()
+    time.sleep(3)
+    
     store()
     
-    return "EMPTY"
+    return "Object retrieved!!"
     
 #END SERVO ADVANCED COMMANDS############################################
 
