@@ -47,9 +47,9 @@ servo_max = 600  # Max pulse length out of 4096
 
 # Mapping servo channels to their name
 BASE = 0
-SHOULDER = 1
-ELBOW = 2
-GRIPPER = 4
+SHOULDER = 4
+ELBOW = 8
+GRIPPER = 12
 
 # Servo mapped limits
 GRIPPER_OPEN = 160
@@ -120,14 +120,14 @@ def set_servo(servo_id,angle):
 
 @app.route('/dance')
 def sequence():
-    servo(0,0)
-    servo(1,0)
-    servo(2,0)
-    servo(3,0)
+    servo(BASE,0)
+    servo(SHOULDER,0)
+    servo(ELBOW,0)
+    servo(GRIPPER,0)
 
     time.sleep(3)
 
-    servo(0,90)
+    servo(BASE,90)
     time.sleep(3)
     
     servo(1,90)
@@ -265,7 +265,7 @@ def detect_object():
     return output
 
 @app.route('/center')
-def center():
+def center(x_axis=True):
     X_centered = False
     for frame in camera.capture_continuous(rawCapture, format="bgr", use_video_port=True):
         frame = frame.array
@@ -280,9 +280,9 @@ def center():
             x = object_vals[1]
             y = object_vals[2]
             radius = object_vals[3]
-            if(x > (x_center + x_thresh) and not(X_centered)):
+            if(x > (x_center + x_thresh) and not(X_centered) and x_axis):
                 arm.update(BASE, arm.base - x_step)
-            elif(x < (x_center - x_thresh) and not(X_centered)):
+            elif(x < (x_center - x_thresh) and not(X_centered) and x_axis):
                 arm.update(BASE, arm.base + x_step)
             else:
                 print("X centered")
@@ -331,7 +331,7 @@ def zoom():
         arm.update(SHOULDER, arm.shoulder - shoulder_step)
         time.sleep(0.5)
         arm.update(ELBOW, arm.elbow - arm_step)
-        radius = center()
+        radius = center(x_axis = False)
         print("SHOULDER: " + str(arm.shoulder))
         print("ELBOW: " + str(arm.elbow))
         if(is_num(radius)):
@@ -375,6 +375,11 @@ def is_num(input):
         return True
     except ValueError:
         return False
+
+@app.route('/init')
+def init():
+    init_arm()
+    return "Arm is in initial position"
 
 if __name__ == '__main__':
     init_arm()
