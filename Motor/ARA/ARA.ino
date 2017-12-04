@@ -42,6 +42,10 @@ int PWMA=10;
 int PWMB=11;
 int serialData=0;
 int motorCode = 0;
+int currTime=0;
+int Time=3001;
+int freq=100;
+int LED=13;
 
 /************************************************************************************************************
   Groups and Commands
@@ -116,7 +120,7 @@ void setup()
   pinMode(i,OUTPUT);
   pinMode(10,OUTPUT);
   pinMode(11,OUTPUT);
-
+  pinMode(13,OUTPUT);
   
   // setup PC serial port
   pcSerial.begin(9600);
@@ -222,6 +226,7 @@ void loop()
       setup();
       return;
     }
+    //digitalWrite(LED,LOW);
     // <<-- can do some processing here, while the module is busy
   }
   while (!easyvr.hasFinished());
@@ -312,6 +317,10 @@ void action()
     case G0_ARA:
       // write your action code here
       // group = GROUP_X\SET_X; <-- or jump to another group or wordset for composite commands
+      for (int i=0;i<4;i++){
+        freq=100;
+        BLINK();
+      }
       group = SET_2;
       break;
     }
@@ -359,6 +368,7 @@ void action()
     case S2_LEFT:
       // write your action code here
       // group = GROUP_X\SET_X; <-- or jump to another group or wordset for composite commands
+      lightLeft();
       left();
       motorCode = 402;
       group = GROUP_0;
@@ -366,21 +376,23 @@ void action()
     case S2_RIGHT:
       // write your action code here
       // group = GROUP_X\SET_X; <-- or jump to another group or wordset for composite commands
+      lightRight();
       right();
       motorCode = 403;
       group = GROUP_0;
       break;
-    case S2_UP:
+    //case S2_UP:
       // write your action code here
       // group = GROUP_X\SET_X; <-- or jump to another group or wordset for composite commands
-      break;
-    case S2_DOWN:
+      //break;
+    //case S2_DOWN:
       // write your action code here
       // group = GROUP_X\SET_X; <-- or jump to another group or wordset for composite commands
-      break;
+      //break;
     case S2_FORWARD:
       // write your action code here
       // group = GROUP_X\SET_X; <-- or jump to another group or wordset for composite commands
+      lightForward();
       forward();
       motorCode = 400;
       group = GROUP_0;
@@ -389,6 +401,7 @@ void action()
       // write your action code here
       // group = GROUP_X\SET_X; <-- or jump to another group or wordset for composite commands
       motorCode = 401;
+      lightReverse();
       reverse();
       group = GROUP_0;
       break;
@@ -448,54 +461,83 @@ void action()
 /************************************************************************************************************
   Directional Functions
 *************************************************************************************************************/
-void forward(){
-  digitalWrite(STBY,HIGH);
-  digitalWrite(AIN1,HIGH);
-  digitalWrite(AIN2,LOW);
-  digitalWrite(PWMA,200);
-  digitalWrite(BIN1,HIGH);
-  digitalWrite(BIN2,LOW);
-  digitalWrite(PWMB,200);
-  delay(1000);
-  digitalWrite(STBY,LOW);
-  delay(1000);
-}
 
-void reverse(){
-  digitalWrite(STBY,HIGH);
-  digitalWrite(AIN1,LOW);
-  digitalWrite(AIN2,HIGH);
-  digitalWrite(PWMA,200);
-  digitalWrite(BIN1,LOW);
-  digitalWrite(BIN2,HIGH);
-  digitalWrite(PWMB,200);
-  delay(1000);
-  digitalWrite(STBY,LOW);
-  delay(1000);
+void BLINK(){
+  digitalWrite(LED,HIGH);
+  delay(freq);
+  digitalWrite(LED,LOW);
+  delay(freq);
 }
-
-void left(){
-  digitalWrite(STBY,HIGH);
-  digitalWrite(AIN1,LOW);
-  digitalWrite(AIN2,HIGH);
-  digitalWrite(PWMA,200);
-  digitalWrite(BIN1,HIGH);
-  digitalWrite(BIN2,LOW);
-  digitalWrite(PWMB,200);
-  delay(1000);
-  digitalWrite(STBY,LOW);
-  delay(1000);
-}
-
 void right(){
   digitalWrite(STBY,HIGH);
   digitalWrite(AIN1,HIGH);
   digitalWrite(AIN2,LOW);
   digitalWrite(PWMA,200);
+  digitalWrite(BIN1,HIGH);
+  digitalWrite(BIN2,LOW);
+  digitalWrite(PWMB,200);
+  delay(1000);
+  digitalWrite(STBY,LOW);
+  delay(1000);
+}
+void lightRight(){
+  for (int currTime=0;currTime<Time;currTime=currTime+freq){
+    freq=2000;
+    BLINK();
+  }
+}
+void left(){
+  digitalWrite(STBY,HIGH);
+  digitalWrite(AIN1,LOW);
+  digitalWrite(AIN2,HIGH);
+  digitalWrite(PWMA,200);
   digitalWrite(BIN1,LOW);
   digitalWrite(BIN2,HIGH);
   digitalWrite(PWMB,200);
   delay(1000);
   digitalWrite(STBY,LOW);
   delay(1000);
+}
+
+void lightLeft(){
+  for (int currTime=0;currTime<Time;currTime=currTime+freq){
+    freq=500;
+    BLINK();
+  }
+}
+void forward(){
+  digitalWrite(STBY,HIGH);
+  digitalWrite(AIN1,LOW);
+  digitalWrite(AIN2,HIGH);
+  digitalWrite(PWMA,200);
+  digitalWrite(BIN1,HIGH);
+  digitalWrite(BIN2,LOW);
+  digitalWrite(PWMB,200);
+  delay(1000);
+  digitalWrite(STBY,LOW);
+  delay(1000);
+}
+void lightForward(){
+  for (int currTime=0;currTime<Time;currTime=currTime+freq){
+    freq=100;
+    BLINK();
+  }
+}
+void reverse(){
+  digitalWrite(STBY,HIGH);
+  digitalWrite(AIN1,HIGH);
+  digitalWrite(AIN2,LOW);
+  digitalWrite(PWMA,200);
+  digitalWrite(BIN1,LOW);
+  digitalWrite(BIN2,HIGH);
+  digitalWrite(PWMB,200);
+  delay(1000);
+  digitalWrite(STBY,LOW);
+  delay(1000);
+}
+void lightReverse(){
+  for (int currTime=0;currTime<Time;currTime=currTime+freq){
+    freq=1000;
+    BLINK();
+  }
 }
