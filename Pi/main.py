@@ -1,7 +1,7 @@
-# Simple demo of of the PCA9685 PWM servo/LED controller library.
-# This will move channel 0 from min to max position repeatedly.
-# Author: Tony DiCola
-# License: Public Domain
+#!/bin/env/python
+"""
+Main controller for Automated Robotic Arm.
+"""
 from __future__ import division
 import time
 import os
@@ -10,9 +10,11 @@ import cv2
 from ball_tracking_red import detect
 from flask import Flask, send_file
 
+#BEGIN CAMERA ##############################################################
+
 # Import Pi Camera module.
 from picamera.array import PiRGBArray
-from     picamera import PiCamera
+from picamera import PiCamera
 CAMERA_WIDTH = 800
 CAMERA_HEIGHT = 600
 camera = PiCamera()
@@ -33,13 +35,21 @@ y_step = 1
 IMAGE_DIR = 'images'
 image_count = 0
 
+#END CAMERA ##############################################################
+
+
 app = Flask(__name__)
+
+#BEGIN SERVO SETUP#######################################################
 
 # Import the PCA9685 module.
 import Adafruit_PCA9685
 
 # Initialise the PCA9685 using the default address (0x40).
 pwm = Adafruit_PCA9685.PCA9685()
+
+# Set frequency to 60hz, good for servos.
+pwm.set_pwm_freq(60)
 
 # Configure min and max servo pulse lengths
 servo_min = 150  # Min pulse length out of 4096
@@ -56,7 +66,8 @@ GRIPPER_OPEN = 160
 GRIPPER_CLOSE = 90
 
 class Arm():
-    def __init__(self):
+    def __init__(self,pwm):
+        self.pwm = pwm
         self.base = 0
         self.shoulder = 0
         self.elbow = 0
@@ -78,131 +89,115 @@ class Arm():
         else:
             print("Error in Arm.update()")
 
-        set_servo(servo_id, angle)
+        pwm_length = int(self.angle_to_pwm(angle))
+        
+        self.pwm.set_pwm(servo_id, 0, pwm_length)
+        
+    def angle_to_pwm(self,angle):
+        """Helper function to convert angles to pulse lengths"""
+        pwm_length = servo_min + ((servo_max-servo_min)/180.*angle)
+        return pwm_length
         
 arm = Arm()
 
-def init_arm():
-    arm.update(BASE, 90)
-    arm.update(SHOULDER, 90)
-    arm.update(ELBOW, 150)
+#END SERVO SETUP#######################################################
 
-# Helper function to make setting a servo pulse width simpler.
-def set_servo_pulse(channel, pulse):
-    pulse_length = 1000000    # 1,000,000 us per second
-    pulse_length //= 60       # 60 Hz
-    print('{0}us per period'.format(pulse_length))
-    pulse_length //= 4096     # 12 bits of resolution
-    print('{0}us per bit'.format(pulse_length))
-    pulse *= 1000
-    pulse //= pulse_length
-    pwm.set_pwm(channel, 0, pulse)
-    
-def angle_to_pwm(angle):
-    pwm_length = servo_min + ((servo_max-servo_min)/180.*angle)
-    return pwm_length
+#BEGIN CAMERA FUNCTIONS################################################
+#shoot
+#dist
+#take_picture
+#get_image
+#detect
 
-# Set frequency to 60hz, good for servos.
-pwm.set_pwm_freq(60)
-
-@app.route('/servo/<servo_id>/<angle>')
-def servo(servo_id,angle):
-    arm.update(servo_id, angle)
-
-    return "Servo {} is at a {} angle.".format(servo_id, angle)
-
-def set_servo(servo_id,angle):
-    
-    pwm_length = int(angle_to_pwm(angle))
-    print(pwm_length)
-    pwm.set_pwm(servo_id, 0, pwm_length)
-    
-
-@app.route('/dance')
-def sequence():
-    servo(BASE,0)
-    servo(SHOULDER,0)
-    servo(ELBOW,0)
-    servo(GRIPPER,0)
-
-    time.sleep(3)
-
-    servo(BASE,90)
-    time.sleep(3)
-    
-    servo(1,90)
-    time.sleep(3)
-
-    servo(2,45)
-    time.sleep(3)
-
-    return servo(3,180)
-
-@app.route('/scan')
-def scan():
-
-    # How many degrees per step
-    STEP_SIZE = 45
-
-    # Init elbow to be straight and gripper open
-    servo(SHOULDER,80)
-    servo(ELBOW,180)
-    servo(GRIPPER,90)
-
-    # Calculate how many steps
-    STEPS = int(180/STEP_SIZE + 1)
-
-    '''   
-    # Sweep thr ugh angles forme in camera.capture_continuous(rawCapture, format="bgr", use_video_port=True):
- shoulder
-    for shoulder_step in range(STEPS-2):
-        shoulder_angle = shoulder_step * (STEP_SIZE-30) + 15
-        servo(SHOULDER,shoulder_angle)
-        print("shoulder = {}".format(shoulder_angle))
-        time.sleep(1)
-        '''
-    # Sweep through angles for base
-    for base_step in range(STEPS):
-        base_angle = base_step * STEP_SIZE 
-        servo(BASE,base_angle)
-        print("base = {}".format(base_angle))
-        time.sleep(1)
-        
-
-
-    return 'Scanning...'
-
-@app.route('/camera/shoot')
-def take_picture():
-    # Init camera
-    camera.resolution = (640, 480)
-
-    camera.start_preview()
-    time.sleep(2) # Need to wait at least 2 seconds before capturing
-
+def shoot()
+    """Return a snapshot from camera"""
     # Create save path
-    global image_count
-    image_name = 'capture_' + str(image_count) + '.jpg'
-    image_count += 1
-    image_path = os.path.join(IMAGE_DIR,image_name)
-
+    image_path = os.path.join(IMGAE_DIR,'current_image.jpg')
+    
     # Capture
+    camera.start_preview()
     camera.capture(image_path)
     camera.stop_preview()
     img_bgr = cv2.imread(image_path)
-    pos_x, pos_y, radius = ball_tracking(img_bgr)
-    detect
+    
+    return img_bgr
+    
+def dist(radius):
+    """Converts radius in pixels to distance in cm"""
+    ref_dist = 15
+    ref_vals = 70
+    ratio = ref_dist*ref_vals
+    return ratio/radius  
+
+@app.route('/camera/shoot')
+def take_picture():
+    """Take an image and display on browser"""
+    img_bgr = shoot()
+    pos_x, pos_y, radius = detect(img_bgr)
     # Return image html
-    image_source = os.path.join('image',image_name)
-    return "Took a shot...<br><img src='{}'>".format(image_source)    
+    image_source = os.path.join(IMAGE_DIR,'current_image.jpg')
+    return "Took a shot...<br><img src='{}'>".format(image_source)
 
 @app.route('/camera/image/<image>')
 def get_image(image):
+    """Gets image to display"""
     image_path = os.path.join(IMAGE_DIR,image)
     return send_file(image_path,mimetype='image/gif')
+    
+@app.route('/detect')
+def detect_object():
+    """Detects object and returns distance if found"""
+    frame = shoot()
 
+    object_vals = detect(frame)
+    distance = dist(object_vals[3])
+    print("dist", distance) 
+    if(type(object_vals) is tuple):
+        output = "detected " + str(distance) 
+    else:
+        output = "fuQ"
+    return output
+
+
+#END CAMERA FUNCTIONS################################################
+
+
+#BEGIN SERVO BASIC COMMANDS############################################
+#servo
+#init_arm
+#store
+#dance
+@app.route('/servo/<servo_id>/<angle>')
+def servo(servo_id,angle):
+    """Allows for manual control of servos"""
+    
+    arm.update(servo_id, angle)
+    
+    return "Servo {} is at a {} angle.".format(servo_id, angle)
+    
+@app.route('/init')
+def init_arm():
+    """Send arm to initial position"""
+    arm.update(BASE, 90)
+    arm.update(SHOULDER, 90)
+    arm.update(ELBOW, 150)
+    return "Arm is in initial position"
+    
+@app.route('/release')
+def release():
+    """Opens gripper"""
+    servo(GRIPPER, GRIPPER_OPEN)
+    return "Gripper opened"
+    
+@app.route('/close')
+def close():
+    """Closes gripper"""
+    servo(GRIPPER, GRIPPER_CLOSE)
+    return "Gripper closed"
+    
 @app.route('/store')
 def store():
+    """Does object storing sequenc to drop object in back basket"""
     STEP_TIME = 1
 
     # Moves arm to face forward
@@ -218,51 +213,77 @@ def store():
     time.sleep(3)
     
     # Release object
-    open()
+    release()
     
     return "Object has been stored"
+    
+@app.route('/dance')
+def dance():
+    """Does a random robotic dance"""
+    servo(BASE,0)
+    servo(SHOULDER,0)
+    servo(ELBOW,0)
+    servo(GRIPPER,0)
 
-@app.route('/close')
-def close():
-    '''
-    Closes gripper
-    '''
-    servo(GRIPPER, GRIPPER_CLOSE)
-    return "Gripper closed"
+    time.sleep(3)
 
-@app.route('/open')
-def open():
-    '''
-    Opens gripper
-    '''
-    servo(GRIPPER, GRIPPER_OPEN)
-    return "Gripper opened"
+    servo(BASE,90)
+    time.sleep(3)
+    
+    servo(SHOULDER,90)
+    time.sleep(3)
 
-@app.route('/detect')
-def detect_object():
-    camera.start_preview()
-    time.sleep(2) # Need to wait at least 2 seconds before capturing
+    servo(ELBOW,45)
+    time.sleep(3)
+    
+    servo(GRIPPER,180)
 
-    # Create save path
-    global image_count
-    image_name = 'capture_' + str(image_count) + '.jpg'
-    image_count += 1
-    image_path = os.path.join(IMAGE_DIR,image_name)
+    return "Dance completed"
+    
+    
+    
+#END SERVO BASIC COMMANDS############################################
 
-    # Capture
-    camera.capture(image_path)
-    camera.stop_preview()
-    frame = cv2.imread(image_path)
+#BEGIN SERVO ADVANCED COMMANDS############################################
+#Meaning those that combine camera and servo
+#scan
+#center
+#zoom
+#pick_up   
 
-    object_vals = detect(frame)
-    distance = dist(object_vals[3])
-    print("dist", distance) 
-    #print(object_vals)
-    if(type(object_vals) is tuple):
-        output = "detected " + str(distance) 
-    else:
-        output = "fuQ"
-    return output
+
+@app.route('/scan')
+def scan():
+    """Scans and sets arm to pointing at object"""
+
+    # How many degrees per step
+    STEP_SIZE = 45
+
+    # Init elbow to be straight and gripper open
+    servo(SHOULDER,80)
+    servo(ELBOW,180)
+    release()
+
+    # Calculate how many steps
+    STEPS = int(180/STEP_SIZE + 1)
+
+    '''   
+    # Sweep through angles for shoulder
+    for shoulder_step in range(STEPS-2):
+        shoulder_angle = shoulder_step * (STEP_SIZE-30) + 15
+        servo(SHOULDER,shoulder_angle)
+        print("shoulder = {}".format(shoulder_angle))
+        time.sleep(1)
+        '''
+    # Sweep through angles for base
+    for base_step in range(STEPS):
+        base_angle = base_step * STEP_SIZE 
+        servo(BASE,base_angle)
+        print("base = {}".format(base_angle))
+        time.sleep(1)
+        
+    return 'Scanned'
+
 
 @app.route('/center')
 def center(x_axis=True):
@@ -303,20 +324,10 @@ def center(x_axis=True):
         else:
             print("Object not detected")
             return "Object not detected"
-        #time.sleep(0.i5)
 
-    #return "Centered"
     return str(radius)
 
-def dist(radius):
-    img_ref = cv2.imread('15cm.jpg')
-    #ref_vals = detect(img_ref)
-    ref_dist = 15
-    #print("ref_vals",ref_vals)
-    ref_vals = 70
-    ratio = ref_dist*ref_vals
-    #print("ratio", ratio)
-    return ratio/radius    
+  
 
 @app.route('/zoom')
 def zoom():
@@ -326,14 +337,26 @@ def zoom():
     #shoulder 10; arm 10
     shoulder_step = 5
     arm_step = 3
-    arm.update(GRIPPER, GRIPPER_OPEN)
+    
+    # Was 4 changed to 3 -Simon
+    STOPPING_DIST = 3
+    
+    # Open Gripper
+    release
+    
     while(True):
+        # Move shoulder down a bit
         arm.update(SHOULDER, arm.shoulder - shoulder_step)
         time.sleep(0.5)
+        
+        # Move elbow up a bit
         arm.update(ELBOW, arm.elbow - arm_step)
+        
+        # Center y-axis, but not x-axis
         radius = center(x_axis = False)
         print("SHOULDER: " + str(arm.shoulder))
         print("ELBOW: " + str(arm.elbow))
+        
         if(is_num(radius)):
             dist_away = dist(float(radius))
             print("distance away: " + str(dist_away))
@@ -341,9 +364,11 @@ def zoom():
                 #reduces noise at closer distances
                 x_thresh = 15
                 y_thresh = 15 
-            if(dist_away < 4):
+            if(dist_away < STOPPING_DIST):
+                return "Object within range"
                 break
         else:
+            return "Object not detected"
             break
 
     #update this else where im fuqin dumb
@@ -369,17 +394,16 @@ def pick_up():
 
     return 'Finished sequence'
 
-def is_num(input):
+def is_num(_input):
     try:
-        float(input)
+        float(_input)
         return True
     except ValueError:
         return False
 
-@app.route('/init')
-def init():
-    init_arm()
-    return "Arm is in initial position"
+
+    
+#END SERVO ADVANCED COMMANDS############################################
 
 if __name__ == '__main__':
     init_arm()
