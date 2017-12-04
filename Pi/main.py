@@ -352,7 +352,10 @@ def center(x_axis=True):
                 #    break
                 if(y > (y_center + y_thresh)):
                     print("Y down")
-                    arm.update(ELBOW, arm.elbow + y_step)
+                    if((arm.elbow + y_step) < 180):
+                        arm.update(ELBOW, arm.elbow + y_step)
+                    else:
+                        arm.update(SHOULDER, arm.shoulder - y_step)
                 elif(y < (y_center - y_thresh)):
                     print("Y up")
                     arm.update(ELBOW, arm.elbow - y_step)
@@ -486,6 +489,7 @@ def freedom():
     scan()
     center()
     zoom()
+    adjust()
     close()
     store()
     
