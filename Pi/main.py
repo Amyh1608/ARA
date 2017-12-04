@@ -119,7 +119,7 @@ arm = Arm(pwm)
 def shoot():
     """Return a snapshot from camera"""
     # Create save path
-    image_path = os.path.join(IMGAE_DIR,'current_image.jpg')
+    image_path = os.path.join(IMAGE_DIR,'current_image.jpg')
     
     # Capture
     camera.start_preview()
@@ -140,15 +140,14 @@ def dist(radius):
 def take_picture():
     """Take an image and display on browser"""
     img_bgr = shoot()
-    pos_x, pos_y, radius = detect(img_bgr)
     # Return image html
     image_source = os.path.join(IMAGE_DIR,'current_image.jpg')
     return "Took a shot...<br><img src='{}'>".format(image_source)
 
-@app.route('/camera/image/<image>')
+@app.route('/camera/images/<image>')
 def get_image(image):
     """Gets image to display"""
-    image_path = os.path.join(IMAGE_DIR,image)
+    image_path = os.path.join(IMAGE_DIR,'current_image.jpg')
     return send_file(image_path,mimetype='image/gif')
     
 @app.route('/detect')
