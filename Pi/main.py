@@ -480,7 +480,16 @@ def is_num(_input):
     except ValueError:
         return False
 
-
+@app.route('/freedom')
+def freedom():
+    """Frees ARA to move on its own"""
+    scan()
+    center()
+    zoom()
+    close()
+    store()
+    
+    return "EMPTY"
     
 #END SERVO ADVANCED COMMANDS############################################
 
