@@ -56,7 +56,7 @@ servo_min = 150  # Min pulse length out of 4096
 servo_max = 600  # Max pulse length out of 4096
 
 # Mapping servo channels to their name
-BASE = 0
+BASE = 3
 SHOULDER = 4
 ELBOW = 8
 GRIPPER = 12
