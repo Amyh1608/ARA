@@ -227,16 +227,21 @@ def close():
     
 @app.route('/store')
 def store():
-    """Does object storing sequenc to drop object in back basket"""
+    """Does object storing sequence to drop object in back basket"""
     STEP_TIME = 1
 
     # Moves arm to face forward
     servo(BASE, 80)
     time.sleep(STEP_TIME)
-    
+
     # Move shoulder to straight up
     servo(SHOULDER, 135)
     time.sleep(STEP_TIME)
+
+    # Check if we still have object
+    #if(not is_object()):
+     #   no()
+      #  return "Object lost"
 
     # Move elbow to bend 90 degrees back
     servo(ELBOW, 10) 
@@ -244,8 +249,34 @@ def store():
     
     # Release object
     release()
+
+    yes()
     
     return "Object has been stored"
+
+@app.route('/yes')
+def yes():
+    """Waves"""
+    step = 15
+    for i in range(3):
+        arm.update(ELBOW, arm.elbow + 15)
+        time.sleep(0.5)
+        arm.update(ELBOW, arm.elbow - 15)
+        time.sleep(0.5)
+
+    return "Waved yes"
+
+@app.route('/no')
+def no():
+    """Nodes no"""
+    step = 15    
+    for i in range(3):
+        arm.update(BASE, arm.base + 15)
+        time.sleep(0.5)
+        arm.update(BASE, arm.base - 15)
+        time.sleep(0.5)
+
+    return "Nodded no"
     
 @app.route('/dance')
 def dance():
@@ -318,6 +349,7 @@ def scan():
         print("base = {}".format(base_angle))
         time.sleep(2)
         if(is_object()):
+            yes()
             return "Object found at {}".format(arm.get_arm_state())
         time.sleep(1)
         
@@ -372,7 +404,7 @@ def center(x_axis=True):
   
 
 @app.route('/zoom')
-def zoom():
+def zoom(stop=2.5):
     #shoulder 5; arm 
     #shoulder 5; arm 3 (Prob best so far)
     #shoulder 8; arm 5
@@ -381,7 +413,7 @@ def zoom():
     arm_step = 3
     
     # Was 4 changed to 3 -Simon
-    STOPPING_DIST = 3
+    STOPPING_DIST = stop
     
     # Open Gripper
     release
@@ -403,6 +435,7 @@ def zoom():
             dist_away = dist(float(radius))
             print("distance away: " + str(dist_away))
             if(dist_away < 7):
+                shoulder_step = 3
                 #reduces noise at closer distances
                 x_thresh = 15
                 y_thresh = 15 
@@ -422,7 +455,7 @@ def zoom():
 def adjust():
     """Final adjustment for arm after zooming in"""
     
-    ADJUST_CENTER_Y = 454
+    ADJUST_CENTER_Y = 484
     ADJUST_CENTER_X = 406
     X_centered = False
     for frame in camera.capture_continuous(
