@@ -93,6 +93,7 @@ for frame in camera.capture_continuous(rawCapture, format="bgr", use_video_port=
                 print '---------------------------'
                 print 'not detected'
 
+	cv2.imwrite("ball.jpg",frame)
 	cv2.imshow("Frame", frame)
 	key = cv2.waitKey(1) & 0xFF
         rawCapture.truncate(0) 
