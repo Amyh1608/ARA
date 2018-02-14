@@ -111,16 +111,17 @@ arm = Arm(pwm)
 
 #BEGIN WEB SERVER #####################################################
 @app.route('/index.html')
+@app.route('/')
 def index_html():
-    return send_from_directory('web/index.html')
+    return send_from_directory('web','index.html')
 
 @app.route('/index.js')
 def index_js():
-    return send_from_directory('web/index.js')
+    return send_from_directory('web','index.js')
 
 @app.route('/index.css')
 def index_css():
-    return send_from_directory('web/index.css')
+    return send_from_directory('web','index.css')
 
 #END WEB SERVER #######################################################
 
