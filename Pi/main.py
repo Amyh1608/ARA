@@ -8,7 +8,7 @@ import os
 import numpy as np
 import cv2
 from ball_tracking_red import detect
-from flask import Flask, send_file
+from flask import Flask, send_file, send_from_directory
 
 #BEGIN CAMERA ##############################################################
 
@@ -108,6 +108,22 @@ class Arm():
 arm = Arm(pwm)
 
 #END SERVO SETUP#######################################################
+
+#BEGIN WEB SERVER #####################################################
+@app.route('/index.html')
+def index_html():
+    return send_from_directory('web/index.html')
+
+@app.route('/index.js')
+def index_js():
+    return send_from_directory('web/index.js')
+
+@app.route('/index.css')
+def index_css():
+    return send_from_directory('web/index.css')
+
+#END WEB SERVER #######################################################
+
 
 #BEGIN CAMERA FUNCTIONS################################################
 #shoot
