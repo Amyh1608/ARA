@@ -7,6 +7,7 @@ import time
 import os
 import numpy as np
 import cv2
+from motor import Motor
 from ball_tracking_red import detect
 from flask import Flask, send_file, send_from_directory
 
@@ -107,6 +108,9 @@ class Arm():
         
 arm = Arm(pwm)
 
+my_motor = Motor()
+
+
 #END SERVO SETUP#######################################################
 
 #BEGIN WEB SERVER #####################################################
@@ -193,6 +197,25 @@ def detect_object():
 
 #END CAMERA FUNCTIONS################################################
 
+
+#BEGIN MOTOR FUNCTIONS###############################################
+@app.route('/motor/<motor_dir>')
+def direction(motor_dir):
+    if(motor_dir == "forward"):
+        my_motor.forward()
+    elif(motor_dir == "backward"):
+        my_motor.backward()
+    elif(motor_dir == "left"):
+        my_motor.left()
+    elif(motor_dir == "right"):
+        my_motor.right()
+    else:
+        print("Error Invalid Direction: " + motor_dir)
+    
+    return "Motor Moved"
+    
+
+#END MOTOR FUNCTIONS#################################################
 
 #BEGIN SERVO BASIC COMMANDS############################################
 #state
