@@ -1,3 +1,4 @@
+// Servo control
 function servo(joint, degrees){
   console.log(joint,degrees);
   var joint_id = '#' + joint;
@@ -7,6 +8,7 @@ function servo(joint, degrees){
   $.get(servo_command, function(data){
     console.log(data);
   });
+  get_image();
   
 }
 
@@ -22,10 +24,20 @@ function servo_minus(joint){
   servo(joint,cur_deg - 1);
 }
 
+// Camera control
 function get_image(){
     var image_url = "image"
     $.get(image_url, function(data){
         $("#img_1").attr("src",data);
         console.log("Retrieved Image");
+    });
+}
+
+//Motor control
+function motor(direction){
+    var motor_url = "motor/"
+    var motor_cmd = motor_url + direction;
+    $.get(image_url, function(data){
+        console.log(data);
     });
 }
