@@ -3,7 +3,7 @@ function servo(joint, degrees){
   console.log(joint,degrees);
   var joint_id = '#' + joint;
   $(joint_id).text(degrees);
-  var servo_url = "http://localhost:5000/servo/";
+  var servo_url = "/servo/";
   var servo_command = servo_url + joint +'/' + degrees;
   $.get(servo_command, function(data){
     console.log(data);
