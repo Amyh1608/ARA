@@ -4,7 +4,7 @@ Main controller for Automated Robotic Arm.
 """
 from __future__ import division
 import time
-import os
+import os, base64
 import numpy as np
 import cv2
 from motor import Motor
@@ -110,6 +110,23 @@ arm = Arm(pwm)
 
 my_motor = Motor()
 
+# Encode image to base64
+def encode(img):
+    base64_start = "data:image/jpg;base64,"
+    
+    temp_image_name = 'temp.jpg'
+    cv2.imwrite(temp_image_name,img)
+
+    # Reopen image and encode in base64
+    image = open(temp_image_name, 'rb') #open binary file in read mode
+    image_read = image.read()
+    image_64_encode = base64.encodestring(image_read)
+    os.remove(temp_image_name)
+    
+    image_64_encode = base64_start + image_64_encode
+    
+    return image_64_encode
+
 
 #END SERVO SETUP#######################################################
 
@@ -126,6 +143,13 @@ def index_js():
 @app.route('/index.css')
 def index_css():
     return send_from_directory('web','index.css')
+    
+@app.route('/image')
+def image():
+    
+    frame = shoot()
+    
+    return encode(frame)
 
 #END WEB SERVER #######################################################
 
