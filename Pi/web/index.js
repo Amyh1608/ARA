@@ -23,6 +23,7 @@ function servo_minus(joint){
 }
 
 function get_image(){
+    var image_url = "image"
     $.get(image_url, function(data){
         $("#img_1").attr("src",data);
         console.log("Retrieved Image");
