@@ -37,7 +37,7 @@ function get_image(){
 function motor(direction){
     var motor_url = "motor/"
     var motor_cmd = motor_url + direction;
-    $.get(image_url, function(data){
+    $.get(motor_cmd, function(data){
         console.log(data);
     });
 }
